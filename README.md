@@ -209,3 +209,4 @@ Errors use RFC 7807 `ProblemDetail` with a stable `code`:
   **not** `@Transactional` (unlike the other integration tests) to catch this class of bug at all — a shared
   test transaction never commits or rolls back mid-test, so a flushed-but-doomed row reads back fine and the
   regression passes unnoticed.
+# resortbooking
