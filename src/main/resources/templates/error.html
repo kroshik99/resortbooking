@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Something went wrong', ~{::main})}">
+<head><title>Something went wrong</title></head>
+<body>
+<main>
+    <h1 th:text="${status} == 404 ? 'Page not found' : 'Something went wrong'">Something went wrong</h1>
+    <p class="sub" th:if="${status} == 404">That address does not exist on this site.</p>
+    <p class="sub" th:unless="${status} == 404">
+        The problem has been logged. Please try again.
+    </p>
+
+    <div class="card">
+        <div class="option-meta">Status</div>
+        <div class="price" style="font-size:20px" th:text="${status} ?: 'error'">500</div>
+    </div>
+
+    <p><a class="btn-primary" th:href="@{/}">Back to search</a></p>
+</main>
+</body>
+</html>

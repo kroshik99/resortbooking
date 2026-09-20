@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Room calendar', ~{::main})}">
+<head><title>Room calendar</title></head>
+<body>
+<main class="wide">
+    <h1>Room calendar</h1>
+
+    <div class="weeknav">
+        <a th:href="@{/staff/calendar(week=${previousWeek})}">&larr; Previous</a>
+        <strong>
+            Week of <span th:text="${#temporals.format(weekStart, 'MMM d, yyyy')}">Dec 1</span>
+        </strong>
+        <a th:href="@{/staff/calendar(week=${nextWeek})}">Next &rarr;</a>
+    </div>
+
+    <div class="calendar-scroll">
+        <div class="calendar">
+            <!-- header row -->
+            <div class="cal-corner">Room</div>
+            <div class="cal-day" th:each="day : ${days}"
+                 th:classappend="${day == today} ? ' is-today' : ''">
+                <span th:text="${#temporals.format(day, 'EEE')}">Mon</span><br>
+                <span th:text="${#temporals.format(day, 'd MMM')}">1 Dec</span>
+            </div>
+
+            <!-- one row per room -->
+            <th:block th:each="row : ${rows}">
+                <div class="cal-room">
+                    <strong th:text="${row.roomNumber()}">201</strong>
+                    <small th:text="${row.roomType()}">Deluxe</small>
+                    <small class="maint" th:if="${row.roomStatus() == 'MAINTENANCE'}">maintenance</small>
+                </div>
+
+                <div class="cal-cell" th:each="day : ${days}"></div>
+
+                <a class="cal-bar" th:each="bar : ${row.bars()}"
+                   th:classappend="' status-' + ${bar.status()}"
+                   th:style="|grid-column: ${bar.startCol} / span ${bar.span}|"
+                   th:href="@{/staff/bookings/{ref}(ref=${bar.reference()})}"
+                   th:title="${bar.reference()} + ' - ' + ${bar.guestName()} + ' (' + ${bar.status()} + ')'">
+                    <span th:text="${bar.guestName()}">Juan Dela Cruz</span>
+                </a>
+            </th:block>
+        </div>
+    </div>
+
+    <p class="empty" th:if="${#lists.isEmpty(rows)}">No rooms configured.</p>
+
+    <div class="legend">
+        <span class="chip status-PENDING">Pending</span>
+        <span class="chip status-CONFIRMED">Confirmed</span>
+        <span class="chip status-CHECKED_IN">Checked in</span>
+        <span class="chip status-CHECKED_OUT">Checked out</span>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('My bookings', ~{::main})}">
+<head><title>My bookings</title></head>
+<body>
+<main>
+    <h1>My bookings</h1>
+
+    <p class="empty" th:if="${#lists.isEmpty(bookings)}">
+        Nothing booked yet. <a th:href="@{/}">Find a room</a>.
+    </p>
+
+    <div class="card" th:each="booking : ${bookings}">
+        <div class="option">
+            <div>
+                <div class="price" style="font-size:15px" th:text="${booking.reference()}">RB-2026-00001</div>
+                <div class="option-name">
+                    <span th:text="${booking.roomType()}">Deluxe</span>
+                    · room <span th:text="${booking.roomNumber()}">201</span>
+                </div>
+                <div class="option-meta">
+                    <span th:text="${#temporals.format(booking.checkIn(), 'MMM d, yyyy')}">Dec 1</span>
+                    to
+                    <span th:text="${#temporals.format(booking.checkOut(), 'MMM d, yyyy')}">Dec 3</span>
+                    · <span th:text="${booking.nights()}">2</span> nights
+                </div>
+                <div class="option-meta">Status: <span th:text="${booking.status()}">PENDING</span></div>
+            </div>
+            <div>
+                <div class="price">&#8369;<span th:text="${booking.totalPrice()}">7000.00</span></div>
+                <!-- BR-08: only PENDING or CONFIRMED can still be cancelled. -->
+                <form th:if="${booking.status() == 'PENDING' or booking.status() == 'CONFIRMED'}"
+                      th:action="@{/bookings/{ref}/cancel(ref=${booking.reference()})}" method="post"
+                      style="margin-top:8px">
+                    <button type="submit" class="linklike" style="color:#B42318">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

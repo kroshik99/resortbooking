@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Booking confirmed', ~{::main})}">
+<head><title>Booking confirmed</title></head>
+<body>
+<main>
+    <h1>You are booked</h1>
+    <p class="sub">Keep this reference for your arrival.</p>
+
+    <div class="card">
+        <div class="option-meta">Booking reference</div>
+        <div class="price" style="font-size:24px" th:text="${booking.reference()}">RB-2026-00001</div>
+    </div>
+
+    <div class="card">
+        <div class="option">
+            <div>
+                <div class="option-name">
+                    <span th:text="${booking.roomType()}">Deluxe</span>
+                    · room <span th:text="${booking.roomNumber()}">201</span>
+                </div>
+                <div class="option-meta">
+                    <span th:text="${#temporals.format(booking.checkIn(), 'MMM d, yyyy')}">Dec 1</span>
+                    to
+                    <span th:text="${#temporals.format(booking.checkOut(), 'MMM d, yyyy')}">Dec 3</span>
+                    · <span th:text="${booking.nights()}">2</span> nights
+                    · <span th:text="${booking.numGuests()}">2</span> guests
+                </div>
+                <div class="option-meta">Status: <span th:text="${booking.status()}">PENDING</span></div>
+            </div>
+            <div class="price">&#8369;<span th:text="${booking.totalPrice()}">7000.00</span></div>
+        </div>
+    </div>
+
+    <p><a th:href="@{/me/bookings}">See all my bookings</a></p>
+</main>
+</body>
+</html>

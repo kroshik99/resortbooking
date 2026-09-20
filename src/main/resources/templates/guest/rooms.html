@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Choose a room', ~{::main})}">
+<head><title>Choose a room</title></head>
+<body>
+<main>
+    <h1>Choose a room</h1>
+    <p class="sub">
+        <span th:text="${#temporals.format(checkIn, 'MMM d, yyyy')}">Dec 1</span>
+        to
+        <span th:text="${#temporals.format(checkOut, 'MMM d, yyyy')}">Dec 3</span>
+        ·
+        <span th:text="${nights} + (${nights} == 1 ? ' night' : ' nights')">2 nights</span>
+        ·
+        <span th:text="${guests} + (${guests} == 1 ? ' guest' : ' guests')">2 guests</span>
+    </p>
+
+    <p class="empty" th:if="${#lists.isEmpty(options)}">
+        Nothing is free for those dates. Try different ones.
+    </p>
+
+    <div class="card" th:each="option : ${options}">
+        <div class="option">
+            <div>
+                <div class="option-name" th:text="${option.roomType()}">Deluxe</div>
+                <div class="option-meta">
+                    Sleeps <span th:text="${option.capacity()}">3</span>
+                    · <span th:text="${option.roomsLeft()}">2</span> left
+                </div>
+            </div>
+            <div>
+                <div class="price">
+                    &#8369;<span th:text="${option.totalPrice()}">7000.00</span>
+                    <small>total for <span th:text="${nights}">2</span> nights</small>
+                </div>
+                <a class="btn-primary" style="margin-top:8px"
+                   th:href="@{/book(typeId=${option.roomTypeId()},checkIn=${checkIn},
+                                    checkOut=${checkOut},guests=${guests})}">Book</a>
+            </div>
+        </div>
+    </div>
+
+    <p style="margin-top:24px"><a th:href="@{/}">Change dates</a></p>
+</main>
+</body>
+</html>

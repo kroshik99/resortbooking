@@ -1,0 +1,7 @@
+target/
+config/
+.git/
+.idea/
+.vscode/
+*.log
+HELP.md

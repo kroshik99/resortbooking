@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Review and confirm', ~{::main})}">
+<head><title>Review and confirm</title></head>
+<body>
+<main>
+    <h1>Review and confirm</h1>
+    <p class="sub">Check everything before we reserve the room.</p>
+
+    <div class="card">
+        <div class="option">
+            <div>
+                <div class="option-name" th:text="${quote.roomType()}">Deluxe</div>
+                <div class="option-meta">
+                    <span th:text="${#temporals.format(bookingForm.checkIn, 'MMM d, yyyy')}">Dec 1</span>
+                    to
+                    <span th:text="${#temporals.format(bookingForm.checkOut, 'MMM d, yyyy')}">Dec 3</span>
+                    · <span th:text="${bookingForm.numGuests}">2</span> guests
+                </div>
+            </div>
+            <div class="price">
+                &#8369;<span th:text="${quote.totalPrice()}">7000.00</span>
+                <small><span th:text="${quote.nights()}">2</span> nights total</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="option-meta">Booking for</div>
+        <div th:text="${bookingForm.fullName}">Juan Dela Cruz</div>
+        <div class="option-meta" th:text="${bookingForm.email}">juan@example.com</div>
+        <div class="option-meta" th:if="${bookingForm.phone}" th:text="${bookingForm.phone}">09171234567</div>
+    </div>
+
+    <form th:action="@{/bookings}" th:object="${bookingForm}" method="post">
+        <input type="hidden" th:field="*{roomTypeId}">
+        <input type="hidden" th:field="*{checkIn}">
+        <input type="hidden" th:field="*{checkOut}">
+        <input type="hidden" th:field="*{numGuests}">
+        <input type="hidden" th:field="*{fullName}">
+        <input type="hidden" th:field="*{email}">
+        <input type="hidden" th:field="*{phone}">
+        <button type="submit" class="btn-primary">Confirm booking</button>
+    </form>
+
+    <p style="margin-top:16px">
+        <a th:href="@{/book(typeId=${bookingForm.roomTypeId},checkIn=${bookingForm.checkIn},
+                           checkOut=${bookingForm.checkOut},guests=${bookingForm.numGuests})}">Edit details</a>
+    </p>
+</main>
+</body>
+</html>
