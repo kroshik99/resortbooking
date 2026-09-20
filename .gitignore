@@ -2,7 +2,7 @@ HELP.md
 target/
 
 ### Local secrets / overrides - never commit ###
-config/
+/config/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
