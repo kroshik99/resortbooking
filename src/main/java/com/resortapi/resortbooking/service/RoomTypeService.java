@@ -28,6 +28,13 @@ public class RoomTypeService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public RoomTypeDto findById(Long id) {
+        return roomTypes.findById(id)
+                .map(RoomTypeDto::from)
+                .orElseThrow(() -> new ResourceNotFoundException("Room type", id));
+    }
+
     @Transactional
     public RoomTypeDto create(CreateRoomTypeRequest request) {
         if (roomTypes.existsByNameIgnoreCase(request.name())) {

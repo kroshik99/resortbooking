@@ -99,6 +99,21 @@ public class Booking {
         transitionTo(BookingStatus.CANCELLED);
     }
 
+    /**
+     * Moves the stay itself - dates and party size - while the booking hasn't
+     * started yet. The same window BR-09 allows a cancellation in; changing the
+     * room is a different booking, not an edit, so it stays out of this method.
+     */
+    public void reschedule(LocalDate checkIn, LocalDate checkOut, int numGuests, BigDecimal totalPrice) {
+        if (status != BookingStatus.PENDING && status != BookingStatus.CONFIRMED) {
+            throw new InvalidStatusTransitionException("booking", status.name(), "EDITED");
+        }
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+        this.numGuests = numGuests;
+        this.totalPrice = totalPrice;
+    }
+
     private void transitionTo(BookingStatus next) {
         if (!status.canMoveTo(next)) {
             throw new InvalidStatusTransitionException(status, next);

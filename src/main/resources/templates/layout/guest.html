@@ -16,6 +16,7 @@
         <a th:href="@{/me/bookings}" sec:authorize="isAuthenticated()">My bookings</a>
         <a th:href="@{/me/staff-request}" sec:authorize="hasRole('GUEST')">Become staff</a>
         <a th:href="@{/staff/calendar}" sec:authorize="hasAnyRole('FRONT_DESK','ADMIN')">Staff</a>
+        <a th:href="@{/admin/rooms}" sec:authorize="hasRole('ADMIN')">Rooms</a>
         <a th:href="@{/admin/checkin-requests}" sec:authorize="hasRole('ADMIN')">
             Approvals
             <span class="badge" th:if="${pendingApprovalCount != null and pendingApprovalCount > 0}"

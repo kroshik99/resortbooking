@@ -196,6 +196,8 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .status-CHECKED_IN  { background: #D5DCF0; color: #1E2F5C; }
 .status-CHECKED_OUT { background: #E4E5E1; color: #3E4743; }
 .status-CANCELLED   { background: #F6D6D3; color: #7A1F16; }
+.status-AVAILABLE   { background: #CFE5DF; color: #0B3F3A; }
+.status-MAINTENANCE { background: #F6D6D3; color: #7A1F16; }
 
 .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 

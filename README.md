@@ -48,6 +48,9 @@ UPDATE app_user SET role = 'ADMIN' WHERE email = 'someone@example.com';
 | Guest booking flow in the browser | search → rooms → details → review → confirm → my bookings → cancel |
 | Staff room calendar | weekly grid, colour-coded by status, links to booking detail |
 | Staff booking actions | confirm / check-in / check-out / cancel, each a POST guarded by BR-08 |
+| Staff booking search | `/staff/bookings`, by reference or guest name |
+| Booking edit | dates and party size, by the owning guest or staff, revalidated like a new booking |
+| Admin room/room-type management | `/admin/rooms`, `/admin/room-types`: add, edit, send a room for maintenance |
 | Check-in approval workflow | front desk can only check in on the actual check-in date; early/late attempts file a request an admin approves or rejects |
 | Staff access requests | a guest can ask to become front desk; an admin approves or rejects it |
 | Registration and session login | Thymeleaf pages, CSRF protected |
@@ -56,9 +59,8 @@ UPDATE app_user SET role = 'ADMIN' WHERE email = 'someone@example.com';
 | Schema as migrations | Flyway, with constraints enforcing the business rules |
 | Page-level error handling | bad input redirects to a flash message, not a stack trace; a 404 renders a real page instead of forcing login |
 
-**Not built yet:** `/staff/bookings` search page, admin rooms/rates pages, seasonal-rate XML import/export,
-booking edit (`PATCH`), notification microservice, Docker and CI. The staff pages also reuse the guest layout
-rather than the dark sidebar in the UI brief — functional, not yet matching the visual spec.
+**Not built yet:** seasonal-rate XML import/export, notification microservice, CI. The staff pages also reuse
+the guest layout rather than the dark sidebar in the UI brief — functional, not yet matching the visual spec.
 
 ## Architecture
 
@@ -174,9 +176,12 @@ Docker was not available on the development machine — swapping back is a small
 | `GET` | `/api/v1/availability` | public |
 | `POST` | `/api/v1/bookings` | authenticated |
 | `GET` | `/api/v1/bookings/{reference}` | owner or staff |
+| `PATCH` | `/api/v1/bookings/{reference}` | owner or staff |
 | `POST` | `/api/v1/bookings/{reference}/cancel` | owner or staff |
 | `POST` | `/api/v1/bookings/{reference}/confirm`, `/check-in`, `/check-out` | staff |
 | `GET`/`POST` | `/api/v1/rooms`, `/api/v1/room-types` | staff / admin |
+| `PUT` | `/api/v1/room-types/{id}` | admin |
+| `PATCH` | `/api/v1/rooms/{id}/status` | staff / admin |
 | `GET` | `/api/v1/checkin-requests` | admin |
 | `POST` | `/api/v1/checkin-requests/{id}/approve`, `/reject` | admin |
 | `POST` | `/api/v1/staff-requests` | authenticated |

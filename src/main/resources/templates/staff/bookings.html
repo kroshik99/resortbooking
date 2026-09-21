@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Search bookings', ~{::main})}">
+<head><title>Search bookings</title></head>
+<body>
+<main>
+    <h1>Search bookings</h1>
+
+    <form class="card" th:action="@{/staff/bookings}" method="get">
+        <div class="field">
+            <label for="q">Reference or guest name</label>
+            <input type="text" id="q" name="q" th:value="${query}" autofocus>
+        </div>
+        <button type="submit" class="btn-primary">Search</button>
+    </form>
+
+    <p class="empty" th:if="${query != null and not #strings.isEmpty(query) and #lists.isEmpty(results)}">
+        No bookings match "<span th:text="${query}"></span>".
+    </p>
+
+    <div class="card" th:each="booking : ${results}">
+        <div class="option">
+            <div>
+                <div class="price" style="font-size:15px" th:text="${booking.reference()}">RB-2026-00001</div>
+                <div class="option-name">
+                    <span th:text="${booking.guestName()}">Juan Dela Cruz</span>
+                    · <span th:text="${booking.roomType()}">Deluxe</span>
+                    room <span th:text="${booking.roomNumber()}">201</span>
+                </div>
+                <div class="option-meta">
+                    <span th:text="${#temporals.format(booking.checkIn(), 'MMM d, yyyy')}">Dec 1</span>
+                    to
+                    <span th:text="${#temporals.format(booking.checkOut(), 'MMM d, yyyy')}">Dec 3</span>
+                    · <span class="chip" th:classappend="' status-' + ${booking.status()}"
+                            th:text="${booking.status()}">PENDING</span>
+                </div>
+            </div>
+            <a th:href="@{/staff/bookings/{ref}(ref=${booking.reference()})}">View</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

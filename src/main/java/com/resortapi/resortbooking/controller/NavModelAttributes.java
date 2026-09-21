@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
         BookingPageController.class,
         StaffPageController.class,
         AdminPageController.class,
+        AdminCatalogPageController.class,
         AuthPageController.class,
         StaffRequestPageController.class})
 public class NavModelAttributes {

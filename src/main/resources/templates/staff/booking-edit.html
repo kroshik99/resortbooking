@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Edit booking', ~{::main})}">
+<head><title>Edit booking</title></head>
+<body>
+<main>
+    <h1>Edit <span th:text="${booking.reference()}">RB-2026-00001</span></h1>
+    <p class="sub">
+        <span th:text="${booking.guestName()}">Juan Dela Cruz</span>
+        · <span th:text="${booking.roomType()}">Deluxe</span>
+        room <span th:text="${booking.roomNumber()}">201</span>
+        · room stays the same - changing rooms means cancel and rebook.
+    </p>
+
+    <form class="card" th:action="@{/staff/bookings/{ref}/edit(ref=${booking.reference()})}"
+          th:object="${rescheduleForm}" method="post">
+        <div class="field">
+            <label for="checkIn">Check-in</label>
+            <input type="date" id="checkIn" th:field="*{checkIn}">
+            <p class="field-error" th:if="${#fields.hasErrors('checkIn')}" th:errors="*{checkIn}"></p>
+        </div>
+        <div class="field">
+            <label for="checkOut">Check-out</label>
+            <input type="date" id="checkOut" th:field="*{checkOut}">
+            <p class="field-error" th:if="${#fields.hasErrors('checkOut')}" th:errors="*{checkOut}"></p>
+        </div>
+        <div class="field">
+            <label for="numGuests">Guests</label>
+            <input type="number" id="numGuests" th:field="*{numGuests}" min="1">
+            <p class="field-error" th:if="${#fields.hasErrors('numGuests')}" th:errors="*{numGuests}"></p>
+        </div>
+        <button type="submit" class="btn-primary">Save changes</button>
+    </form>
+
+    <p><a th:href="@{/staff/bookings/{ref}(ref=${booking.reference()})}">&larr; Back to booking</a></p>
+</main>
+</body>
+</html>

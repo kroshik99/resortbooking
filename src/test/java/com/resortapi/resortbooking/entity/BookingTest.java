@@ -78,6 +78,56 @@ class BookingTest {
         assertThatThrownBy(booking::cancel).isInstanceOf(InvalidStatusTransitionException.class);
     }
 
+    @Test
+    @DisplayName("rescheduling a PENDING booking moves its dates, guests and price")
+    void reschedulesAPendingBooking() {
+        Booking booking = newBooking();
+
+        booking.reschedule(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 5), 3, new BigDecimal("14000.00"));
+
+        assertThat(booking.getCheckIn()).isEqualTo(LocalDate.of(2026, 11, 1));
+        assertThat(booking.getCheckOut()).isEqualTo(LocalDate.of(2026, 11, 5));
+        assertThat(booking.getNumGuests()).isEqualTo(3);
+        assertThat(booking.getTotalPrice()).isEqualByComparingTo("14000.00");
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("rescheduling a CONFIRMED booking is also allowed")
+    void reschedulesAConfirmedBooking() {
+        Booking booking = newBooking();
+        booking.confirm();
+
+        booking.reschedule(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 3), 2, new BigDecimal("7000.00"));
+
+        assertThat(booking.getCheckIn()).isEqualTo(LocalDate.of(2026, 11, 1));
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
+    }
+
+    @Test
+    @DisplayName("a checked-in booking cannot be rescheduled")
+    void refusesRescheduleAfterCheckIn() {
+        Booking booking = newBooking();
+        booking.confirm();
+        booking.checkIn();
+
+        assertThatThrownBy(() -> booking.reschedule(
+                LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 3), 2, new BigDecimal("7000.00")))
+                .isInstanceOf(InvalidStatusTransitionException.class);
+        assertThat(booking.getCheckIn()).isEqualTo(LocalDate.of(2026, 10, 12));
+    }
+
+    @Test
+    @DisplayName("a cancelled booking cannot be rescheduled")
+    void refusesRescheduleAfterCancel() {
+        Booking booking = newBooking();
+        booking.cancel();
+
+        assertThatThrownBy(() -> booking.reschedule(
+                LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 3), 2, new BigDecimal("7000.00")))
+                .isInstanceOf(InvalidStatusTransitionException.class);
+    }
+
     private static Booking newBooking() {
         return bookingFor(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 14));
     }

@@ -37,4 +37,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     /** BR-11: references come from a sequence, so they never expose a row id. */
     @Query(value = "SELECT nextval('booking_ref_seq')", nativeQuery = true)
     long nextReferenceNumber();
+
+    /** For editing: is this room already taken by a different booking on these dates? */
+    @Query("""
+            SELECT COUNT(b) > 0 FROM Booking b
+            WHERE b.room.id = :roomId
+              AND b.id <> :excludeBookingId
+              AND b.status <> com.resortapi.resortbooking.entity.BookingStatus.CANCELLED
+              AND b.checkIn < :checkOut AND b.checkOut > :checkIn
+            """)
+    boolean existsOverlapping(Long roomId, LocalDate checkIn, LocalDate checkOut, Long excludeBookingId);
 }

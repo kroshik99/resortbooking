@@ -22,6 +22,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -94,6 +95,19 @@ public class BookingService {
                 .toList();
     }
 
+    /** FR-09: staff search by reference or guest name, capped at 50 results. */
+    @Transactional(readOnly = true)
+    public List<BookingDto> search(String query) {
+        String q = query == null ? "" : query.trim();
+        if (q.isEmpty()) {
+            return List.of();
+        }
+        return bookings.findTop50ByReferenceContainingIgnoreCaseOrGuestFullNameContainingIgnoreCaseOrderByCheckInDesc(q, q)
+                .stream()
+                .map(BookingDto::from)
+                .toList();
+    }
+
     /** Prefills the details form for a signed-in guest. */
     @Transactional(readOnly = true)
     public GuestDetails profileFor(String email) {
@@ -151,6 +165,42 @@ public class BookingService {
     public BookingDto checkOut(String reference) {
         Booking booking = require(reference);
         booking.checkOut();
+        return BookingDto.from(booking);
+    }
+
+    /**
+     * The owning guest or staff may move a booking's dates/party size while it is
+     * still PENDING or CONFIRMED. Re-validates everything create() does, against the
+     * booking's own current room - changing the room itself is cancel-and-rebook,
+     * not an edit.
+     */
+    @Transactional
+    public BookingDto reschedule(String reference, LocalDate checkIn, LocalDate checkOut, int numGuests,
+                                 Caller caller) {
+        Booking booking = require(reference);
+        requireVisibleTo(booking, caller);
+
+        BookingDateRules.check(checkIn, checkOut);
+
+        RoomType roomType = booking.getRoom().getRoomType();
+        if (!roomType.accommodates(numGuests)) {
+            throw new CapacityExceededException(roomType.getName(), roomType.getCapacity(), numGuests);
+        }
+
+        if (bookings.existsOverlapping(booking.getRoom().getId(), checkIn, checkOut, booking.getId())) {
+            throw new RoomNotAvailableException(roomType.getName(), checkIn, checkOut);
+        }
+
+        Quote quote = pricingService.quote(roomType, checkIn, checkOut);
+
+        try {
+            booking.reschedule(checkIn, checkOut, numGuests, quote.total());
+            bookings.saveAndFlush(booking);
+        } catch (DataIntegrityViolationException e) {
+            // Same backstop as create(): the pre-check above narrows the race but the
+            // exclusion constraint is what actually closes it.
+            throw new RoomNotAvailableException(roomType.getName(), checkIn, checkOut);
+        }
         return BookingDto.from(booking);
     }
 

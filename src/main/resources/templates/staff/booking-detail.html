@@ -76,6 +76,9 @@
                 <button type="submit" class="btn-primary">Check out</button>
             </form>
 
+            <a th:if="${booking.status() == 'PENDING' or booking.status() == 'CONFIRMED'}"
+               th:href="@{/staff/bookings/{ref}/edit(ref=${booking.reference()})}">Edit dates</a>
+
             <form th:if="${booking.status() == 'PENDING' or booking.status() == 'CONFIRMED'}"
                   th:action="@{/staff/bookings/{ref}/cancel(ref=${booking.reference()})}" method="post">
                 <button type="submit" class="btn-danger">Cancel booking</button>

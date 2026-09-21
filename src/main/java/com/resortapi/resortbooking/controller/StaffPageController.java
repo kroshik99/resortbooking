@@ -1,17 +1,26 @@
 package com.resortapi.resortbooking.controller;
 
+import com.resortapi.resortbooking.dto.BookingDto;
+import com.resortapi.resortbooking.dto.RescheduleBookingForm;
+import com.resortapi.resortbooking.exception.CapacityExceededException;
 import com.resortapi.resortbooking.exception.CheckInApprovalRequiredException;
+import com.resortapi.resortbooking.exception.InvalidBookingDatesException;
 import com.resortapi.resortbooking.exception.InvalidStatusTransitionException;
 import com.resortapi.resortbooking.exception.ResourceNotFoundException;
+import com.resortapi.resortbooking.exception.RoomNotAvailableException;
 import com.resortapi.resortbooking.service.BookingService;
 import com.resortapi.resortbooking.service.CalendarService;
 import com.resortapi.resortbooking.service.CheckInApprovalService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +68,14 @@ public class StaffPageController {
         return "staff/calendar";
     }
 
+    /** FR-09: search by reference or guest name; blank query shows no results. */
+    @GetMapping("/bookings")
+    public String search(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("query", q);
+        model.addAttribute("results", (q == null || q.isBlank()) ? List.of() : bookingService.search(q));
+        return "staff/bookings";
+    }
+
     @GetMapping("/bookings/{reference}")
     public String bookingDetail(@PathVariable String reference,
                                 Authentication authentication,
@@ -100,5 +117,56 @@ public class StaffPageController {
             return "redirect:/staff/calendar";
         }
         return "redirect:/staff/bookings/" + reference;
+    }
+
+    @GetMapping("/bookings/{reference}/edit")
+    public String editForm(@PathVariable String reference,
+                           Authentication authentication,
+                           Model model,
+                           RedirectAttributes flash) {
+        BookingDto booking;
+        try {
+            booking = bookingService.findByReference(reference, Callers.of(authentication));
+        } catch (ResourceNotFoundException e) {
+            flash.addFlashAttribute("error", "No booking with reference " + reference + ".");
+            return "redirect:/staff/calendar";
+        }
+        if (!model.containsAttribute("rescheduleForm")) {
+            RescheduleBookingForm form = new RescheduleBookingForm();
+            form.setCheckIn(booking.checkIn());
+            form.setCheckOut(booking.checkOut());
+            form.setNumGuests(booking.numGuests());
+            model.addAttribute("rescheduleForm", form);
+        }
+        model.addAttribute("booking", booking);
+        return "staff/booking-edit";
+    }
+
+    /** Moves dates/party size on the booking's own room; changing the room is cancel-and-rebook. */
+    @PostMapping("/bookings/{reference}/edit")
+    public String edit(@PathVariable String reference,
+                       @Valid @ModelAttribute("rescheduleForm") RescheduleBookingForm form,
+                       BindingResult result,
+                       Authentication authentication,
+                       Model model,
+                       RedirectAttributes flash) {
+        var caller = Callers.of(authentication);
+        if (!result.hasErrors()) {
+            try {
+                bookingService.reschedule(
+                        reference, form.getCheckIn(), form.getCheckOut(), form.getNumGuests(), caller);
+                flash.addFlashAttribute("success", reference + " updated.");
+                return "redirect:/staff/bookings/" + reference;
+            } catch (InvalidBookingDatesException | CapacityExceededException e) {
+                model.addAttribute("error", e.getMessage());
+            } catch (RoomNotAvailableException e) {
+                model.addAttribute("error", "This room is not free for those dates.");
+            } catch (ResourceNotFoundException e) {
+                flash.addFlashAttribute("error", "No booking with reference " + reference + ".");
+                return "redirect:/staff/calendar";
+            }
+        }
+        model.addAttribute("booking", bookingService.findByReference(reference, caller));
+        return "staff/booking-edit";
     }
 }
