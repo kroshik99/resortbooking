@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Staff access', ~{::main})}">
+<head><title>Staff access</title></head>
+<body>
+<main>
+    <h1>Request staff access</h1>
+    <p class="sub">Front desk accounts are granted by an admin, not created directly. Submit a request and
+        an admin will review it.</p>
+
+    <div th:if="${latestRequest == null}">
+        <form th:action="@{/me/staff-request}" method="post">
+            <button type="submit" class="btn-primary">Request front desk access</button>
+        </form>
+    </div>
+
+    <div class="card" th:if="${latestRequest != null}">
+        <p th:if="${latestRequest.status() == 'PENDING'}">
+            Your request is waiting on admin approval (submitted
+            <span th:text="${#temporals.format(latestRequest.requestedAt(), 'MMM d, yyyy h:mm a')}">Dec 1, 2:00 PM</span>).
+        </p>
+
+        <div th:if="${latestRequest.status() == 'REJECTED'}">
+            <p>
+                Your last request was rejected on
+                <span th:text="${#temporals.format(latestRequest.reviewedAt(), 'MMM d, yyyy')}">Dec 2</span>.
+            </p>
+            <form th:action="@{/me/staff-request}" method="post">
+                <button type="submit" class="btn-primary">Request again</button>
+            </form>
+        </div>
+
+        <p th:if="${latestRequest.status() == 'APPROVED'}">
+            Your request was approved. Log out and log back in to pick up your new role.
+        </p>
+    </div>
+</main>
+</body>
+</html>

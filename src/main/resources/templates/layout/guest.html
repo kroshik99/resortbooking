@@ -14,11 +14,17 @@
     <a class="brand" th:href="@{/}">Resort Booking</a>
     <nav class="topnav">
         <a th:href="@{/me/bookings}" sec:authorize="isAuthenticated()">My bookings</a>
+        <a th:href="@{/me/staff-request}" sec:authorize="hasRole('GUEST')">Become staff</a>
         <a th:href="@{/staff/calendar}" sec:authorize="hasAnyRole('FRONT_DESK','ADMIN')">Staff</a>
         <a th:href="@{/admin/checkin-requests}" sec:authorize="hasRole('ADMIN')">
             Approvals
             <span class="badge" th:if="${pendingApprovalCount != null and pendingApprovalCount > 0}"
                   th:text="${pendingApprovalCount}">2</span>
+        </a>
+        <a th:href="@{/admin/staff-requests}" sec:authorize="hasRole('ADMIN')">
+            Staff requests
+            <span class="badge" th:if="${pendingStaffRequestCount != null and pendingStaffRequestCount > 0}"
+                  th:text="${pendingStaffRequestCount}">1</span>
         </a>
         <a th:href="@{/login}" sec:authorize="!isAuthenticated()">Log in</a>
         <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">

@@ -62,6 +62,11 @@ public class SecurityConfig {
                         // as a side effect of a front-desk check-in attempt, not its own call.
                         .requestMatchers("/api/v1/checkin-requests/**").hasRole("ADMIN")
 
+                        // Any signed-in (non-staff) user may ask to become staff; only an
+                        // admin may list or decide those requests.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/staff-requests").authenticated()
+                        .requestMatchers("/api/v1/staff-requests/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(handling -> handling

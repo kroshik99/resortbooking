@@ -58,4 +58,8 @@ public class AppUser {
     public boolean isEnabled() {
         return enabled;
     }
+
+    public void promoteTo(Role newRole) {
+        this.role = newRole;
+    }
 }

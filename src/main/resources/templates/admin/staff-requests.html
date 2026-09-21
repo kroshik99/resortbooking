@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/guest :: page('Staff access requests', ~{::main})}">
+<head><title>Staff access requests</title></head>
+<body>
+<main>
+    <h1>Staff access requests</h1>
+    <p class="sub">Guests asking to be promoted to front desk.</p>
+
+    <p class="empty" th:if="${#lists.isEmpty(requests)}">Nothing waiting on approval.</p>
+
+    <div class="card" th:each="req : ${requests}">
+        <div class="option">
+            <div>
+                <div class="option-name" th:text="${req.userEmail()}">someone@example.com</div>
+                <div class="option-meta">
+                    Requested
+                    <span th:text="${#temporals.format(req.requestedAt(), 'MMM d, yyyy h:mm a')}">Dec 1, 2:00 PM</span>
+                </div>
+            </div>
+            <div class="actions">
+                <form th:action="@{/admin/staff-requests/{id}/approve(id=${req.id()})}" method="post">
+                    <button type="submit" class="btn-primary">Approve</button>
+                </form>
+                <form th:action="@{/admin/staff-requests/{id}/reject(id=${req.id()})}" method="post">
+                    <button type="submit" class="btn-danger">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

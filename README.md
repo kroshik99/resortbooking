@@ -33,12 +33,12 @@ Flyway creates the schema and seed data on first start. Open <http://localhost:8
 The JWT secret has **no default on purpose** — the app refuses to start without one, so a signing key can never
 be accidentally shipped from source control. In production it comes from the `JWT_SECRET` environment variable.
 
-There's no admin UI yet for creating staff accounts (FR-10's "manage staff accounts" is unbuilt), so to get a
-`FRONT_DESK` login for testing the check-in approval flow below, register a normal account through
-`/register` and promote it directly:
+A guest can ask to become staff from their own account (`/me/staff-request`); an admin grants it from
+`/admin/staff-requests`. There's still no admin UI for creating an account directly or for granting `ADMIN`
+itself - that stays a manual step, on purpose (see the business rules table below):
 
 ```sql
-UPDATE app_user SET role = 'FRONT_DESK' WHERE email = 'someone@example.com';
+UPDATE app_user SET role = 'ADMIN' WHERE email = 'someone@example.com';
 ```
 
 ## What works
@@ -49,6 +49,7 @@ UPDATE app_user SET role = 'FRONT_DESK' WHERE email = 'someone@example.com';
 | Staff room calendar | weekly grid, colour-coded by status, links to booking detail |
 | Staff booking actions | confirm / check-in / check-out / cancel, each a POST guarded by BR-08 |
 | Check-in approval workflow | front desk can only check in on the actual check-in date; early/late attempts file a request an admin approves or rejects |
+| Staff access requests | a guest can ask to become front desk; an admin approves or rejects it |
 | Registration and session login | Thymeleaf pages, CSRF protected |
 | JSON API under `/api/v1` | availability, bookings, rooms, room types, auth |
 | JWT auth with roles | `GUEST`, `FRONT_DESK`, `ADMIN` |
@@ -103,10 +104,12 @@ site cannot replay it. Session cookies *are* sent automatically, so the page cha
 | BR-10 | Maintenance rooms are unbookable | availability query |
 | BR-11 | References never expose row ids | `booking_ref_seq` |
 | *(added)* | Front desk can only check in on the booking's actual date; off-date attempts require admin approval. Admin's own check-in is never gated — their role is the override. | `BookingService.checkIn` + `CheckInApprovalService` |
+| *(added)* | A guest becomes staff only through an admin-approved request, never by self-registration. Escalating to `ADMIN` itself is never reachable this way — only `FRONT_DESK`, and only by a direct database action. | `StaffRequestService` + `StaffRequest.approve` |
 
-That last rule isn't in the original PRD (BR-01–BR-11) — it was added afterward as a real product requirement.
-It gets its own table (`check_in_request`), its own tiny state machine (`PENDING → APPROVED`/`REJECTED`, the
-same shape as `BookingStatus`), and its own admin queue at `/admin/checkin-requests`.
+Neither of those last two rules is in the original PRD (BR-01–BR-11) — both were added afterward as real
+product requirements. Each gets its own table, its own tiny state machine (`PENDING → APPROVED`/`REJECTED`,
+the same shape as `BookingStatus`), and its own admin queue (`/admin/checkin-requests`,
+`/admin/staff-requests`).
 
 ## Concurrency: the interesting part
 
@@ -176,6 +179,9 @@ Docker was not available on the development machine — swapping back is a small
 | `GET`/`POST` | `/api/v1/rooms`, `/api/v1/room-types` | staff / admin |
 | `GET` | `/api/v1/checkin-requests` | admin |
 | `POST` | `/api/v1/checkin-requests/{id}/approve`, `/reject` | admin |
+| `POST` | `/api/v1/staff-requests` | authenticated |
+| `GET` | `/api/v1/staff-requests` | admin |
+| `POST` | `/api/v1/staff-requests/{id}/approve`, `/reject` | admin |
 
 Errors use RFC 7807 `ProblemDetail` with a stable `code`:
 
