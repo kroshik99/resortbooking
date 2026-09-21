@@ -13,12 +13,12 @@
 <header class="topbar">
     <a class="brand" th:href="@{/}">Resort Booking</a>
     <nav class="topnav">
-        <a class="staff-link" th:href="@{/staff/calendar}" sec:authorize="hasAnyRole('FRONT_DESK','ADMIN')">
+        <a class="staff-link" th:href="@{/staff/calendar}" sec:authorize="hasRole('FRONT_DESK')">
             Staff area
-            <span class="badge"
-                  th:if="${(pendingApprovalCount != null and pendingApprovalCount > 0)
-                          or (pendingStaffRequestCount != null and pendingStaffRequestCount > 0)}"
-                  th:text="${(pendingApprovalCount ?: 0) + (pendingStaffRequestCount ?: 0)}">3</span>
+        </a>
+
+        <a class="staff-link" th:href="@{/admin/rooms}" sec:authorize="hasRole('ADMIN')">
+            Admin settings
         </a>
 
         <details class="account-menu" sec:authorize="isAuthenticated()">
