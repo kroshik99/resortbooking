@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/guest :: page('Rooms', ~{::main})}">
+      th:replace="~{layout/staff :: page('Rooms', ~{::main})}">
 <head><title>Rooms</title></head>
 <body>
 <main>
     <h1>Rooms</h1>
-    <p class="sub"><a th:href="@{/admin/room-types}">Manage room types &rarr;</a></p>
 
     <p class="empty" th:if="${#lists.isEmpty(rooms)}">No rooms yet.</p>
 

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/guest :: page('Room calendar', ~{::main})}">
+      th:replace="~{layout/staff :: page('Room calendar', ~{::main})}">
 <head><title>Room calendar</title></head>
 <body>
 <main class="wide">
     <h1>Room calendar</h1>
-    <p class="sub"><a th:href="@{/staff/bookings}">Search bookings by reference or guest name &rarr;</a></p>
 
     <div class="weeknav">
         <a th:href="@{/staff/calendar(week=${previousWeek})}">&larr; Previous</a>

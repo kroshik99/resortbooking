@@ -58,9 +58,9 @@ UPDATE app_user SET role = 'ADMIN' WHERE email = 'someone@example.com';
 | JWT auth with roles | `GUEST`, `FRONT_DESK`, `ADMIN` |
 | Schema as migrations | Flyway, with constraints enforcing the business rules |
 | Page-level error handling | bad input redirects to a flash message, not a stack trace; a 404 renders a real page instead of forcing login |
+| Two layouts per the UI brief | guest pages keep the clean top-bar layout; staff/admin pages use a dark 232px sidebar (`layout/staff.html`), grouped into Staff and Admin sections with live approval-count badges |
 
-**Not built yet:** seasonal-rate XML import/export, notification microservice, CI. The staff pages also reuse
-the guest layout rather than the dark sidebar in the UI brief — functional, not yet matching the visual spec.
+**Not built yet:** seasonal-rate XML import/export, notification microservice, CI.
 
 ## Architecture
 

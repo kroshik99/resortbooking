@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="page(pageTitle, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} + ' · Resort Booking'">Resort Booking</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <a class="sidebar-brand" th:href="@{/}">Resort Booking</a>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Staff</div>
+            <a th:href="@{/staff/calendar}">Room calendar</a>
+            <a th:href="@{/staff/bookings}">Search bookings</a>
+
+            <div class="sidebar-section" sec:authorize="hasRole('ADMIN')">Admin</div>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/rooms}">Rooms</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/room-types}">Room types</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/checkin-requests}">
+                Check-in approvals
+                <span class="badge" th:if="${pendingApprovalCount != null and pendingApprovalCount > 0}"
+                      th:text="${pendingApprovalCount}">2</span>
+            </a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/staff-requests}">
+                Staff requests
+                <span class="badge" th:if="${pendingStaffRequestCount != null and pendingStaffRequestCount > 0}"
+                      th:text="${pendingStaffRequestCount}">1</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <a th:href="@{/}">&larr; Guest site</a>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="linklike-sidebar">Log out</button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="shell-content">
+        <div class="wrap">
+            <div th:replace="~{fragments/alert :: alert}"></div>
+            <main th:replace="${content}">
+                <!-- page content is injected here -->
+            </main>
+        </div>
+    </div>
+</div>
+</body>
+</html>
