@@ -26,6 +26,7 @@
         <div class="field">
             <label for="description">Description (optional)</label>
             <input type="text" id="description" th:field="*{description}">
+            <p class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></p>
         </div>
         <button type="submit" class="btn-primary">Save changes</button>
     </form>

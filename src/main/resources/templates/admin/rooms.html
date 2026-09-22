@@ -4,51 +4,65 @@
 <head><title>Rooms</title></head>
 <body>
 <main>
-    <h1>Rooms</h1>
+    <div class="page-header">
+        <h1>Rooms</h1>
+        <span class="count-chip" th:if="${not #lists.isEmpty(rooms)}"
+              th:text="${#lists.size(rooms)} + ' total'">6 total</span>
+    </div>
 
     <p class="empty" th:if="${#lists.isEmpty(rooms)}">No rooms yet.</p>
 
-    <div class="card" th:each="room : ${rooms}">
-        <div class="option">
-            <div>
-                <div class="option-name">
-                    Room <span th:text="${room.roomNumber()}">201</span>
-                    · <span th:text="${room.roomType()}">Deluxe</span>
-                </div>
-                <div class="option-meta">
+    <div class="table-wrap" th:if="${not #lists.isEmpty(rooms)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Room</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="room : ${rooms}">
+                <td class="cell-strong" th:text="${room.roomNumber()}">201</td>
+                <td th:text="${room.roomType()}">Deluxe</td>
+                <td>
                     <span class="chip" th:classappend="' status-' + ${room.status()}"
                           th:text="${room.status()}">AVAILABLE</span>
-                </div>
-            </div>
-            <div class="actions">
-                <form th:if="${room.status() == 'AVAILABLE'}"
-                      th:action="@{/admin/rooms/{id}/maintenance(id=${room.id()})}" method="post">
-                    <button type="submit" class="btn-danger">Send for maintenance</button>
-                </form>
-                <form th:if="${room.status() == 'MAINTENANCE'}"
-                      th:action="@{/admin/rooms/{id}/available(id=${room.id()})}" method="post">
-                    <button type="submit" class="btn-primary">Return to service</button>
-                </form>
-            </div>
-        </div>
+                </td>
+                <td class="cell-actions">
+                    <form th:if="${room.status() == 'AVAILABLE'}"
+                          th:action="@{/admin/rooms/{id}/maintenance(id=${room.id()})}" method="post">
+                        <button type="submit" class="btn-danger btn-sm">Send for maintenance</button>
+                    </form>
+                    <form th:if="${room.status() == 'MAINTENANCE'}"
+                          th:action="@{/admin/rooms/{id}/available(id=${room.id()})}" method="post">
+                        <button type="submit" class="btn-primary btn-sm">Return to service</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2 style="margin-top:24px">Add a room</h2>
-    <form class="card" th:action="@{/admin/rooms}" th:object="${roomForm}" method="post">
-        <div class="field">
-            <label for="roomNumber">Room number</label>
-            <input type="text" id="roomNumber" th:field="*{roomNumber}">
-            <p class="field-error" th:if="${#fields.hasErrors('roomNumber')}" th:errors="*{roomNumber}"></p>
-        </div>
-        <div class="field">
-            <label for="roomTypeId">Room type</label>
-            <select id="roomTypeId" th:field="*{roomTypeId}">
-                <option th:each="rt : ${roomTypes}" th:value="${rt.id()}" th:text="${rt.name()}">Deluxe</option>
-            </select>
-            <p class="field-error" th:if="${#fields.hasErrors('roomTypeId')}" th:errors="*{roomTypeId}"></p>
-        </div>
-        <button type="submit" class="btn-primary">Add room</button>
-    </form>
+    <details class="add-panel">
+        <summary>+ Add a room</summary>
+        <form class="card" th:action="@{/admin/rooms}" th:object="${roomForm}" method="post">
+            <div class="field">
+                <label for="roomNumber">Room number</label>
+                <input type="text" id="roomNumber" th:field="*{roomNumber}">
+                <p class="field-error" th:if="${#fields.hasErrors('roomNumber')}" th:errors="*{roomNumber}"></p>
+            </div>
+            <div class="field">
+                <label for="roomTypeId">Room type</label>
+                <select id="roomTypeId" th:field="*{roomTypeId}">
+                    <option th:each="rt : ${roomTypes}" th:value="${rt.id()}" th:text="${rt.name()}">Deluxe</option>
+                </select>
+                <p class="field-error" th:if="${#fields.hasErrors('roomTypeId')}" th:errors="*{roomTypeId}"></p>
+            </div>
+            <button type="submit" class="btn-primary">Add room</button>
+        </form>
+    </details>
 </main>
 </body>
 </html>

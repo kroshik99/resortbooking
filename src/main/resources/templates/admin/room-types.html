@@ -4,47 +4,65 @@
 <head><title>Room types</title></head>
 <body>
 <main>
-    <h1>Room types</h1>
+    <div class="page-header">
+        <h1>Room types</h1>
+        <span class="count-chip" th:if="${not #lists.isEmpty(roomTypes)}"
+              th:text="${#lists.size(roomTypes)} + ' total'">4 total</span>
+    </div>
 
     <p class="empty" th:if="${#lists.isEmpty(roomTypes)}">No room types yet.</p>
 
-    <div class="card" th:each="rt : ${roomTypes}">
-        <div class="option">
-            <div>
-                <div class="option-name" th:text="${rt.name()}">Deluxe</div>
-                <div class="option-meta">
-                    Sleeps <span th:text="${rt.capacity()}">2</span>
-                    · &#8369;<span th:text="${rt.basePrice()}">2500.00</span> / night
-                </div>
-                <div class="option-meta" th:if="${rt.description()}" th:text="${rt.description()}">A cozy room.</div>
-            </div>
-            <a th:href="@{/admin/room-types/{id}/edit(id=${rt.id()})}">Edit</a>
-        </div>
+    <div class="table-wrap" th:if="${not #lists.isEmpty(roomTypes)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Capacity</th>
+                <th>Base price</th>
+                <th>Description</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="rt : ${roomTypes}">
+                <td class="cell-strong" th:text="${rt.name()}">Deluxe</td>
+                <td th:text="${rt.capacity()}">2</td>
+                <td class="cell-price">&#8369;<span th:text="${rt.basePrice()}">2500.00</span></td>
+                <td class="cell-muted" th:text="${rt.description() ?: '—'}">A cozy room.</td>
+                <td class="cell-actions">
+                    <a th:href="@{/admin/room-types/{id}/edit(id=${rt.id()})}">Edit</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2 style="margin-top:24px">Add a room type</h2>
-    <form class="card" th:action="@{/admin/room-types}" th:object="${roomTypeForm}" method="post">
-        <div class="field">
-            <label for="name">Name</label>
-            <input type="text" id="name" th:field="*{name}">
-            <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
-        </div>
-        <div class="field">
-            <label for="capacity">Capacity</label>
-            <input type="number" id="capacity" th:field="*{capacity}" min="1">
-            <p class="field-error" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}"></p>
-        </div>
-        <div class="field">
-            <label for="basePrice">Base price per night</label>
-            <input type="number" step="0.01" id="basePrice" th:field="*{basePrice}">
-            <p class="field-error" th:if="${#fields.hasErrors('basePrice')}" th:errors="*{basePrice}"></p>
-        </div>
-        <div class="field">
-            <label for="description">Description (optional)</label>
-            <input type="text" id="description" th:field="*{description}">
-        </div>
-        <button type="submit" class="btn-primary">Add room type</button>
-    </form>
+    <details class="add-panel">
+        <summary>+ Add a room type</summary>
+        <form class="card" th:action="@{/admin/room-types}" th:object="${roomTypeForm}" method="post">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" id="name" th:field="*{name}">
+                <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+            </div>
+            <div class="field">
+                <label for="capacity">Capacity</label>
+                <input type="number" id="capacity" th:field="*{capacity}" min="1">
+                <p class="field-error" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}"></p>
+            </div>
+            <div class="field">
+                <label for="basePrice">Base price per night</label>
+                <input type="number" step="0.01" id="basePrice" th:field="*{basePrice}">
+                <p class="field-error" th:if="${#fields.hasErrors('basePrice')}" th:errors="*{basePrice}"></p>
+            </div>
+            <div class="field">
+                <label for="description">Description (optional)</label>
+                <input type="text" id="description" th:field="*{description}">
+                <p class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></p>
+            </div>
+            <button type="submit" class="btn-primary">Add room type</button>
+        </form>
+    </details>
 </main>
 </body>
 </html>

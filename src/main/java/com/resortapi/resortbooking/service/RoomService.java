@@ -7,6 +7,8 @@ import com.resortapi.resortbooking.entity.RoomStatus;
 import com.resortapi.resortbooking.entity.RoomType;
 import com.resortapi.resortbooking.exception.DuplicateResourceException;
 import com.resortapi.resortbooking.exception.ResourceNotFoundException;
+import com.resortapi.resortbooking.exception.RoomHasActiveBookingsException;
+import com.resortapi.resortbooking.repository.BookingRepository;
 import com.resortapi.resortbooking.repository.RoomRepository;
 import com.resortapi.resortbooking.repository.RoomTypeRepository;
 
@@ -20,10 +22,12 @@ public class RoomService {
 
     private final RoomRepository rooms;
     private final RoomTypeRepository roomTypes;
+    private final BookingRepository bookings;
 
-    public RoomService(RoomRepository rooms, RoomTypeRepository roomTypes) {
+    public RoomService(RoomRepository rooms, RoomTypeRepository roomTypes, BookingRepository bookings) {
         this.rooms = rooms;
         this.roomTypes = roomTypes;
+        this.bookings = bookings;
     }
 
     @Transactional(readOnly = true)
@@ -44,11 +48,21 @@ public class RoomService {
         return RoomDto.from(rooms.save(new Room(request.roomNumber(), roomType)));
     }
 
-    /** FR-14 / BR-10: a room in maintenance drops out of availability. */
+    /**
+     * FR-14 / BR-10: a room in maintenance drops out of availability. Refuses to make
+     * that change while the room still owes someone a stay - silently doing so would
+     * leave a guest with a confirmed reservation and no room, with nothing anywhere
+     * recording that the conflict ever happened.
+     */
     @Transactional
     public RoomDto updateStatus(Long id, RoomStatus status) {
         Room room = rooms.findWithRoomTypeById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room", id));
+
+        if (status == RoomStatus.MAINTENANCE
+                && bookings.existsActiveBookingAfter(id, BookingDateRules.today())) {
+            throw new RoomHasActiveBookingsException(room.getRoomNumber());
+        }
 
         switch (status) {
             case AVAILABLE -> room.returnToService();

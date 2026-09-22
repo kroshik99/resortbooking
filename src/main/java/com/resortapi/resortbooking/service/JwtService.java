@@ -29,11 +29,16 @@ public class JwtService {
         this.expirySeconds = expirySeconds;
     }
 
+    /**
+     * No role claim: JwtAuthenticationFilter re-derives the caller's current role
+     * from the database on every request (via the subject only), so a claim here
+     * would be dead weight at best - and at worst an invitation to someday read it
+     * back for an authorization decision a tampered token could then forge.
+     */
     public String issue(AppUser user) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(user.getEmail())
-                .claim("role", user.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(expirySeconds)))
                 // Pinned: signWith(key) alone picks the algorithm from key length.

@@ -47,4 +47,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
               AND b.checkIn < :checkOut AND b.checkOut > :checkIn
             """)
     boolean existsOverlapping(Long roomId, LocalDate checkIn, LocalDate checkOut, Long excludeBookingId);
+
+    /** For sending a room to maintenance: does it still owe someone a stay? */
+    @Query("""
+            SELECT COUNT(b) > 0 FROM Booking b
+            WHERE b.room.id = :roomId
+              AND b.status IN (com.resortapi.resortbooking.entity.BookingStatus.PENDING,
+                                com.resortapi.resortbooking.entity.BookingStatus.CONFIRMED,
+                                com.resortapi.resortbooking.entity.BookingStatus.CHECKED_IN)
+              AND b.checkOut > :today
+            """)
+    boolean existsActiveBookingAfter(Long roomId, LocalDate today);
 }

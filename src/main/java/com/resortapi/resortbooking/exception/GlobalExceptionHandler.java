@@ -67,6 +67,11 @@ public class GlobalExceptionHandler {
         return problem(HttpStatus.CONFLICT, "Approval required", e.getMessage(), "APPROVAL_REQUIRED");
     }
 
+    @ExceptionHandler(RoomHasActiveBookingsException.class)
+    public ProblemDetail handleRoomHasActiveBookings(RoomHasActiveBookingsException e) {
+        return problem(HttpStatus.CONFLICT, "Room still booked", e.getMessage(), "ROOM_HAS_ACTIVE_BOOKINGS");
+    }
+
     /** Safety net: any constraint a concurrent request tripped is a conflict, not a server fault. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrity(DataIntegrityViolationException e) {

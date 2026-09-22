@@ -24,6 +24,7 @@ public class RoomTypeForm {
     @Digits(integer = 8, fraction = 2)
     private BigDecimal basePrice;
 
+    @Size(max = 1000, message = "Keep the description under 1000 characters")
     private String description;
 
     public String getName() {

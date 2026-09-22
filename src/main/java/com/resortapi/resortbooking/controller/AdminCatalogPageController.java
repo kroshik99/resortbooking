@@ -8,11 +8,13 @@ import com.resortapi.resortbooking.dto.RoomTypeForm;
 import com.resortapi.resortbooking.entity.RoomStatus;
 import com.resortapi.resortbooking.exception.DuplicateResourceException;
 import com.resortapi.resortbooking.exception.ResourceNotFoundException;
+import com.resortapi.resortbooking.exception.RoomHasActiveBookingsException;
 import com.resortapi.resortbooking.service.RoomService;
 import com.resortapi.resortbooking.service.RoomTypeService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -56,8 +58,10 @@ public class AdminCatalogPageController {
                         form.getName(), form.getCapacity(), form.getBasePrice(), form.getDescription()));
                 flash.addFlashAttribute("success", "Room type \"" + form.getName() + "\" added.");
                 return "redirect:/admin/room-types";
-            } catch (DuplicateResourceException e) {
-                result.rejectValue("name", "duplicate", e.getMessage());
+            } catch (DuplicateResourceException | DataIntegrityViolationException e) {
+                // The DataIntegrityViolationException case is a concurrent submit that
+                // won the same unique-name race the pre-check above just lost.
+                result.rejectValue("name", "duplicate", "A room type with that name already exists");
             }
         }
         model.addAttribute("roomTypes", roomTypeService.findAll());
@@ -95,8 +99,8 @@ public class AdminCatalogPageController {
                         form.getName(), form.getCapacity(), form.getBasePrice(), form.getDescription()));
                 flash.addFlashAttribute("success", "Room type updated.");
                 return "redirect:/admin/room-types";
-            } catch (DuplicateResourceException e) {
-                result.rejectValue("name", "duplicate", e.getMessage());
+            } catch (DuplicateResourceException | DataIntegrityViolationException e) {
+                result.rejectValue("name", "duplicate", "A room type with that name already exists");
             } catch (ResourceNotFoundException e) {
                 flash.addFlashAttribute("error", "That room type could not be found.");
                 return "redirect:/admin/room-types";
@@ -124,8 +128,8 @@ public class AdminCatalogPageController {
                 roomService.create(new CreateRoomRequest(form.getRoomNumber(), form.getRoomTypeId()));
                 flash.addFlashAttribute("success", "Room " + form.getRoomNumber() + " added.");
                 return "redirect:/admin/rooms";
-            } catch (DuplicateResourceException e) {
-                result.rejectValue("roomNumber", "duplicate", e.getMessage());
+            } catch (DuplicateResourceException | DataIntegrityViolationException e) {
+                result.rejectValue("roomNumber", "duplicate", "A room with that number already exists");
             } catch (ResourceNotFoundException e) {
                 result.rejectValue("roomTypeId", "notfound", "That room type could not be found.");
             }
@@ -152,6 +156,8 @@ public class AdminCatalogPageController {
             flash.addFlashAttribute("success", "Room " + room.roomNumber() + " is now " + status + ".");
         } catch (ResourceNotFoundException e) {
             flash.addFlashAttribute("error", "That room could not be found.");
+        } catch (RoomHasActiveBookingsException e) {
+            flash.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/rooms";
     }

@@ -2,6 +2,10 @@ package com.resortapi.resortbooking.controller;
 
 import com.jayway.jsonpath.JsonPath;
 
+import com.resortapi.resortbooking.entity.AppUser;
+import com.resortapi.resortbooking.entity.Role;
+import com.resortapi.resortbooking.repository.AppUserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +23,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,6 +39,12 @@ class BookingApiIntegrationTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private AppUserRepository users;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private String anaToken;
     private String benToken;
@@ -137,6 +149,139 @@ class BookingApiIntegrationTest {
                         .content("{\"email\":\"ana.test@example.com\",\"password\":\"definitely-wrong\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.detail").value("Wrong email or password"));
+    }
+
+    /**
+     * Regression test for the account-takeover finding in code_review.md (C-1): a walk-in
+     * guest's booking, made by front desk with no login account, must not become
+     * readable or cancellable by anyone who simply registers using that same email -
+     * registration must refuse it outright instead of silently linking.
+     */
+    @Test
+    @DisplayName("registering with a walk-in guest's email is refused, not silently linked")
+    void registrationRefusesToClaimAWalkInsEmail() throws Exception {
+        AppUser staff = users.save(new AppUser(
+                "walkin-test-staff@example.com", passwordEncoder.encode("testpass123"), Role.FRONT_DESK));
+        String staffToken = login(staff.getEmail(), "testpass123");
+
+        String walkInEmail = "walkin-victim@example.com";
+        String body = mvc.perform(bookingRequest(staffToken)
+                        .content(bookingJson(1, CHECK_IN, CHECK_OUT, 2, walkInEmail)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String reference = JsonPath.read(body, "$.reference");
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"fullName":"Attacker","email":"%s","password":"attackerpass123"}
+                                """.formatted(walkInEmail)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"));
+
+        // No account exists for that email - proves there is nothing an attacker could
+        // have logged in as, even if the registration call above had been missed.
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"attackerpass123"}
+                                """.formatted(walkInEmail)))
+                .andExpect(status().isUnauthorized());
+
+        // The walk-in's booking still exists, untouched, reachable only by staff.
+        mvc.perform(get("/api/v1/bookings/{ref}", reference)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(staffToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("reschedule moves the booking's dates and recalculates the price")
+    void rescheduleMovesDatesAndRecalculatesPrice() throws Exception {
+        String reference = createBooking(anaToken);
+        String newCheckIn = LocalDate.now().plusDays(50).toString();
+        String newCheckOut = LocalDate.now().plusDays(53).toString();
+
+        mvc.perform(patch("/api/v1/bookings/{ref}", reference)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(anaToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"checkIn":"%s","checkOut":"%s","numGuests":2}
+                                """.formatted(newCheckIn, newCheckOut)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.checkIn").value(newCheckIn))
+                .andExpect(jsonPath("$.checkOut").value(newCheckOut))
+                .andExpect(jsonPath("$.nights").value(3));
+    }
+
+    @Test
+    @DisplayName("reschedule on another guest's booking is 404, never 403 - same ownership rule as everywhere else")
+    void rescheduleRefusesAnotherGuestsBooking() throws Exception {
+        String reference = createBooking(anaToken);
+
+        mvc.perform(patch("/api/v1/bookings/{ref}", reference)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(benToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"checkIn":"%s","checkOut":"%s","numGuests":2}
+                                """.formatted(CHECK_IN, CHECK_OUT)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("reschedule still enforces capacity against the booking's own room type")
+    void rescheduleRevalidatesCapacity() throws Exception {
+        String reference = createBooking(anaToken);
+
+        mvc.perform(patch("/api/v1/bookings/{ref}", reference)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(anaToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"checkIn":"%s","checkOut":"%s","numGuests":99}
+                                """.formatted(CHECK_IN, CHECK_OUT)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.code").value("CAPACITY_EXCEEDED"));
+    }
+
+    /**
+     * Regression test for code_review.md finding H-2: sending a room to maintenance
+     * must not silently orphan a guest who already has a confirmed stay booked there.
+     */
+    @Test
+    @DisplayName("a room with an active booking cannot be sent for maintenance")
+    void maintenanceRefusedWhileRoomHasAnActiveBooking() throws Exception {
+        AppUser admin = users.save(new AppUser(
+                "maint-test-admin@example.com", passwordEncoder.encode("testpass123"), Role.ADMIN));
+        String adminToken = login(admin.getEmail(), "testpass123");
+
+        String body = mvc.perform(bookingRequest(adminToken)
+                        .content(bookingJson(1, CHECK_IN, CHECK_OUT, 2, "maint-test-guest@example.com")))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String roomNumber = JsonPath.read(body, "$.roomNumber");
+
+        String roomsBody = mvc.perform(get("/api/v1/rooms")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andReturn().getResponse().getContentAsString();
+        java.util.List<Number> matchingIds =
+                JsonPath.read(roomsBody, "$[?(@.roomNumber=='" + roomNumber + "')].id");
+        Number roomId = matchingIds.get(0);
+
+        mvc.perform(patch("/api/v1/rooms/{id}/status", roomId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"MAINTENANCE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ROOM_HAS_ACTIVE_BOOKINGS"));
+    }
+
+    private String login(String email, String password) throws Exception {
+        String body = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"%s"}
+                                """.formatted(email, password)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.token");
     }
 
     private String createBooking(String token) throws Exception {

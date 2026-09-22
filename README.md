@@ -41,6 +41,15 @@ itself - that stays a manual step, on purpose (see the business rules table belo
 UPDATE app_user SET role = 'ADMIN' WHERE email = 'someone@example.com';
 ```
 
+If a walk-in guest booked by front desk later wants to self-register with that same email, registration
+refuses it on purpose (see [Notable implementation choices](#notable-implementation-choices)) rather than
+auto-linking. Front desk links the two manually once they've confirmed identity in person:
+
+```sql
+UPDATE guest SET user_id = (SELECT id FROM app_user WHERE email = 'someone@example.com')
+WHERE email = 'someone@example.com' AND user_id IS NULL;
+```
+
 ## What works
 
 | Area | Status |
@@ -220,4 +229,10 @@ Errors use RFC 7807 `ProblemDetail` with a stable `code`:
   **not** `@Transactional` (unlike the other integration tests) to catch this class of bug at all — a shared
   test transaction never commits or rolls back mid-test, so a flushed-but-doomed row reads back fine and the
   regression passes unnoticed.
-# resortbooking
+- **Registration never auto-links to an existing guest record**, even though the two share an email and
+  linking would "just work." A first version did link automatically, on the theory that a walk-in guest
+  later creating an account should see their past stay. That let anyone who knew a real guest's email
+  address register with it and immediately read and cancel that guest's bookings — proven live (booked a
+  walk-in, registered with the same email, read and cancelled it as the "attacker"), documented in
+  `code_review.md`. Fixed by refusing registration outright when the email already belongs to a guest
+  record, instead of silently trusting the email string as proof of identity.

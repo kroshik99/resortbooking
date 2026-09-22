@@ -36,21 +36,30 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    /** FR-05. A new account always gets the GUEST role; staff are created by an admin. */
+    /**
+     * FR-05. A new account always gets the GUEST role; staff are created by an admin.
+     *
+     * Deliberately refuses to self-link to an existing walk-in's guest record. Doing
+     * that automatically once meant anyone who merely knew a real guest's email
+     * address could register with it and immediately read and cancel that guest's
+     * bookings - there is no email-verification flow in this app to prove the
+     * registrant is actually that person. Front desk must link the two manually
+     * instead (a direct database action, the same as any other identity-sensitive
+     * change in this app - see README).
+     */
     @Transactional
     public void register(RegisterRequest request) {
         if (users.existsByEmailIgnoreCase(request.email())) {
             throw new DuplicateResourceException("An account already exists for " + request.email());
         }
+        if (guests.findByEmailIgnoreCase(request.email()).isPresent()) {
+            throw new DuplicateResourceException(
+                    "An existing guest record uses this email. Please contact the resort to link your account.");
+        }
 
         AppUser user = users.save(new AppUser(
                 request.email(), passwordEncoder.encode(request.password()), Role.GUEST));
-
-        // A walk-in may already exist with this email; link it rather than duplicating.
-        guests.findByEmailIgnoreCase(request.email())
-                .ifPresentOrElse(
-                        existing -> existing.linkTo(user),
-                        () -> guests.save(new Guest(request.fullName(), request.email(), request.phone(), user)));
+        guests.save(new Guest(request.fullName(), request.email(), request.phone(), user));
     }
 
     @Transactional(readOnly = true)

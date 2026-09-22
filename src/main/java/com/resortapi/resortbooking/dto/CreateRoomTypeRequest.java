@@ -13,5 +13,5 @@ public record CreateRoomTypeRequest(
         @NotBlank @Size(max = 50) String name,
         @Positive int capacity,
         @NotNull @DecimalMin("0.00") @Digits(integer = 8, fraction = 2) BigDecimal basePrice,
-        String description) {
+        @Size(max = 1000) String description) {
 }
