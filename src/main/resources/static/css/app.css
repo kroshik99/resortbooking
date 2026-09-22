@@ -351,6 +351,38 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .add-panel summary::-webkit-details-marker { display: none; }
 .add-panel .card { margin-top: 12px; }
 
+/* ---------- dashboard stat cards ---------- */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.stat-value {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary);
+    line-height: 1.1;
+}
+
+.stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+.stat-card-link { transition: border-color 0.15s; }
+.stat-card-link:hover { border-color: var(--primary); }
+
 /* ---------- staff/admin sidebar layout ---------- */
 
 .shell { display: flex; min-height: 100vh; }

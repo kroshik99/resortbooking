@@ -13,7 +13,7 @@
 <header class="topbar">
     <a class="brand" th:href="@{/}">Resort Booking</a>
     <nav class="topnav">
-        <a class="staff-link" th:href="@{/staff/calendar}" sec:authorize="hasRole('FRONT_DESK')">
+        <a class="staff-link" th:href="@{/staff/dashboard}" sec:authorize="hasRole('FRONT_DESK')">
             Staff area
         </a>
 

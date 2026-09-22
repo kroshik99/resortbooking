@@ -1,12 +1,14 @@
 package com.resortapi.resortbooking.repository;
 
 import com.resortapi.resortbooking.entity.Booking;
+import com.resortapi.resortbooking.entity.BookingStatus;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,4 +68,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             WHERE b.status = com.resortapi.resortbooking.entity.BookingStatus.CHECKED_IN
             """)
     List<Long> findCheckedInRoomIds();
+
+    /** Dashboard: booking activity, not occupancy - counts every reservation made this month. */
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(OffsetDateTime monthStart, OffsetDateTime monthEnd);
+
+    /**
+     * Dashboard: arrivals/departures expected today, cancellations excluded. Written as
+     * @Query rather than derived naming - "checkIn" ending in "In" is misparsed as the
+     * SQL IN operator by Spring Data's method-name parser (countByCheckInAnd... resolves
+     * to a non-existent "check" property).
+     */
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.checkIn = :date AND b.status <> :excluded")
+    long countByCheckInDateExcludingStatus(LocalDate date, BookingStatus excluded);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.checkOut = :date AND b.status <> :excluded")
+    long countByCheckOutDateExcludingStatus(LocalDate date, BookingStatus excluded);
 }

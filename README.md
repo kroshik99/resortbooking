@@ -55,6 +55,7 @@ WHERE email = 'someone@example.com' AND user_id IS NULL;
 | Area | Status |
 |---|---|
 | Guest booking flow in the browser | search → rooms → details → review → confirm → my bookings → cancel |
+| Staff dashboard | `/staff/dashboard`, the staff/admin landing page: bookings this month, check-ins/check-outs today, occupied now, pending approvals |
 | Staff room calendar | weekly grid, colour-coded by status, links to booking detail |
 | Live occupancy | per room type, on the calendar page: rooms actually `CHECKED_IN` right now, out of the total. Separate from booking availability on purpose - see below |
 | Staff booking actions | confirm / check-in / check-out / cancel, each a POST guarded by BR-08 |

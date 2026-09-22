@@ -11,6 +11,7 @@ import com.resortapi.resortbooking.exception.RoomNotAvailableException;
 import com.resortapi.resortbooking.service.BookingService;
 import com.resortapi.resortbooking.service.CalendarService;
 import com.resortapi.resortbooking.service.CheckInApprovalService;
+import com.resortapi.resortbooking.service.DashboardService;
 
 import jakarta.validation.Valid;
 
@@ -39,12 +40,20 @@ public class StaffPageController {
     private final CalendarService calendarService;
     private final BookingService bookingService;
     private final CheckInApprovalService checkInApprovalService;
+    private final DashboardService dashboardService;
 
     public StaffPageController(CalendarService calendarService, BookingService bookingService,
-                               CheckInApprovalService checkInApprovalService) {
+                               CheckInApprovalService checkInApprovalService, DashboardService dashboardService) {
         this.calendarService = calendarService;
         this.bookingService = bookingService;
         this.checkInApprovalService = checkInApprovalService;
+        this.dashboardService = dashboardService;
+    }
+
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("stats", dashboardService.today());
+        return "staff/dashboard";
     }
 
     @GetMapping("/calendar")

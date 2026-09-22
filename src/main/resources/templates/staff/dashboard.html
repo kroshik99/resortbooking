@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/staff :: page('Dashboard', ~{::main})}">
+<head><title>Dashboard</title></head>
+<body>
+<main>
+    <h1>Dashboard</h1>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-value" th:text="${stats.bookingsThisMonth()}">4</div>
+            <div class="stat-label">Bookings this month</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" th:text="${stats.checkInsToday()}">2</div>
+            <div class="stat-label">Check-ins today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" th:text="${stats.checkOutsToday()}">1</div>
+            <div class="stat-label">Check-outs today</div>
+        </div>
+        <a class="stat-card stat-card-link" th:href="@{/staff/calendar}">
+            <div class="stat-value" th:text="${stats.occupiedNow()} + '/' + ${stats.totalRooms()}">3/6</div>
+            <div class="stat-label">Occupied now</div>
+        </a>
+        <a class="stat-card stat-card-link" th:href="@{/admin/checkin-requests}" sec:authorize="hasRole('ADMIN')">
+            <div class="stat-value"
+                 th:text="${(pendingApprovalCount ?: 0) + (pendingStaffRequestCount ?: 0)}">0</div>
+            <div class="stat-label">Pending approvals</div>
+        </a>
+    </div>
+
+    <p class="sub">
+        <a th:href="@{/staff/calendar}">Room calendar &rarr;</a>
+        &nbsp;&middot;&nbsp;
+        <a th:href="@{/staff/bookings}">Search bookings &rarr;</a>
+    </p>
+</main>
+</body>
+</html>
