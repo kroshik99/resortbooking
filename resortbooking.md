@@ -7,8 +7,16 @@ This file is the project index. Full specs live in [`docs/`](docs/):
 - **[PRD & TRD](docs/prd-trd.md)** — product requirements (problem, goals, user roles, functional requirements, business rules) and technical requirements (architecture, tech stack, data model, REST API, security, concurrency, testing strategy, milestones).
 - **[App Flow, UI Brief & Backend Schema](docs/app-flow-ui-backend.md)** — guest and staff page flows, request lifecycle, UI design tokens, Thymeleaf page inventory and conventions, Hibernate entities, repository queries, and the Flyway SQL schema.
 
-`docs/` is the original spec — it does not change as the build progresses. For **what is actually built right
-now**, how to run it, and the concurrency/security reasoning behind it, see **[README.md](README.md)**.
+The two files above are the original spec — they don't change as the build progresses. Two more **living**
+documents do, and are meant to be edited as the design evolves:
+
+- **[Design System](docs/design-system.md)** — the current design (colors, typography, components) as
+  actually implemented, kept up to date for planning new colorways/components before they're built.
+- **[Frontend Modernization](docs/frontend-modernization.md)** — planning notes for the move to React +
+  Tailwind, what the existing `/api/v1` backend already supports and what it doesn't yet.
+
+For **what is actually built right now**, how to run it, and the concurrency/security reasoning behind it,
+see **[README.md](README.md)**.
 
 ## At a glance
 
@@ -55,4 +63,6 @@ See [Milestones](docs/prd-trd.md#milestones) for the full M1–M8 plan (spec & s
 
 ## Open questions
 
-Tracked in [PRD open questions](docs/prd-trd.md#open-questions); the frontend-stack question (Thymeleaf vs React) is resolved in favor of server-rendered Thymeleaf, per the [App Flow doc](docs/app-flow-ui-backend.md).
+Tracked in [PRD open questions](docs/prd-trd.md#open-questions). The frontend-stack question (Thymeleaf vs
+React) was originally resolved in favor of server-rendered Thymeleaf, per the [App Flow doc](docs/app-flow-ui-backend.md) — that's being revisited now in favor of React + Tailwind; see
+[Frontend Modernization](docs/frontend-modernization.md) for what that move actually involves.
