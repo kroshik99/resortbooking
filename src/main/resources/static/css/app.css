@@ -27,7 +27,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     padding: 12px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -35,7 +36,7 @@ body {
 
 .brand { font-weight: 600; color: var(--ink); text-decoration: none; }
 
-.topnav { display: flex; align-items: center; gap: 16px; }
+.topnav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
 .topnav a { color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
 .topnav form { margin: 0; }
 .topnav .staff-link { font-weight: 500; }
@@ -196,7 +197,8 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     margin-bottom: 16px;
 }
 
@@ -284,7 +286,7 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 
 /* ---------- admin data tables ---------- */
 
-.page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
 .page-header h1 { margin-bottom: 0; }
 
 .count-chip {
@@ -333,7 +335,9 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .data-table td.cell-actions a { color: var(--primary); text-decoration: none; }
 .data-table td.cell-actions form { display: inline-block; margin: 0 0 0 8px; }
 
-.btn-sm { width: auto; min-height: 32px; padding: 4px 12px; font-size: 13px; }
+/* 40px, not the usual 44px: still close to the touch-target guideline while staying
+   visibly smaller than a primary action, for dense table rows. */
+.btn-sm { width: auto; min-height: 40px; padding: 4px 12px; font-size: 13px; }
 
 .add-panel { margin-top: 24px; }
 

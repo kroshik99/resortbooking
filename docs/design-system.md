@@ -95,6 +95,23 @@ content styling — only the surrounding chrome differs.
 - **720px** — the sidebar layout collapses from a 232px side column to a horizontal top bar; `main.wide`
   (calendar page) drops its max-width at any size once inside `.wrap:has(.wide)`.
 
+No breakpoint below 480px — everything down to ~320px relies on flex-wrap and CSS Grid `auto-fit`
+(`.stat-grid`) rather than a dedicated small-phone breakpoint, and that's held up under review: `.wrap`'s
+16px side padding leaves enough room for every form/card at 320px, and the stat grid naturally collapses to
+one column via `minmax(160px, 1fr)` without any media query needed.
+
+Audited for narrow-viewport overflow and hardened three spots that had no wrap fallback: `.topbar`/`.topnav`,
+`.weeknav` (calendar week navigation), and `.page-header` (admin Rooms/Room types) all got `flex-wrap: wrap`
+— cheap insurance against clipping if nav text or badges ever get longer than today's content. Also bumped
+`.btn-sm` (table row actions) from 32px to 40px min-height, closer to the 44px touch-target guideline the
+rest of the app already follows; kept below 44px on purpose so table rows stay visually dense.
+
+Two things that intentionally do **not** reflow, by design, not oversight: the room calendar
+(`.calendar`, `min-width: 760px`) and admin data tables (`.data-table`) both scroll horizontally within
+their own container (`.calendar-scroll` / `.table-wrap`) rather than collapsing into a stacked mobile
+layout. Standard pattern for data-dense grids — the alternative (a card-per-row mobile view) is a real
+redesign, not a compatibility fix, and hasn't been asked for.
+
 ## Gaps versus the original UI brief (`docs/app-flow-ui-backend.md`)
 
 - Three planned reusable fragments were never built: `fragments/form.html :: field(...)`,
