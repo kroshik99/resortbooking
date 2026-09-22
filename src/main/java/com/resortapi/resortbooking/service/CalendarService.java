@@ -2,10 +2,13 @@ package com.resortapi.resortbooking.service;
 
 import com.resortapi.resortbooking.dto.CalendarBar;
 import com.resortapi.resortbooking.dto.CalendarRow;
+import com.resortapi.resortbooking.dto.RoomTypeOccupancy;
 import com.resortapi.resortbooking.entity.Booking;
 import com.resortapi.resortbooking.entity.Room;
+import com.resortapi.resortbooking.entity.RoomType;
 import com.resortapi.resortbooking.repository.BookingRepository;
 import com.resortapi.resortbooking.repository.RoomRepository;
+import com.resortapi.resortbooking.repository.RoomTypeRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,8 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,10 +31,12 @@ public class CalendarService {
     private static final int FIRST_DAY_COLUMN = 2;
 
     private final RoomRepository rooms;
+    private final RoomTypeRepository roomTypes;
     private final BookingRepository bookings;
 
-    public CalendarService(RoomRepository rooms, BookingRepository bookings) {
+    public CalendarService(RoomRepository rooms, RoomTypeRepository roomTypes, BookingRepository bookings) {
         this.rooms = rooms;
+        this.roomTypes = roomTypes;
         this.bookings = bookings;
     }
 
@@ -50,6 +58,37 @@ public class CalendarService {
                     room.getRoomNumber(), room.getRoomType().getName(), room.getStatus().name(), bars));
         }
         return rows;
+    }
+
+    /**
+     * Rooms physically occupied right now, per room type - distinct from "booked",
+     * which includes stays that haven't started yet. Availability search still keys
+     * off every non-cancelled booking regardless of check-in status (that's what
+     * actually prevents double-booking); this is a separate, purely informational
+     * view for staff deciding whether a walk-in can be seated right now.
+     */
+    @Transactional(readOnly = true)
+    public List<RoomTypeOccupancy> occupancyNow() {
+        Set<Long> checkedInRoomIds = new HashSet<>(bookings.findCheckedInRoomIds());
+
+        Map<Long, int[]> counts = new LinkedHashMap<>();
+        Map<Long, String> names = new LinkedHashMap<>();
+        for (RoomType roomType : roomTypes.findAllByOrderByNameAsc()) {
+            counts.put(roomType.getId(), new int[2]);
+            names.put(roomType.getId(), roomType.getName());
+        }
+
+        for (Room room : rooms.findAllByOrderByRoomNumberAsc()) {
+            int[] count = counts.get(room.getRoomType().getId());
+            count[1]++;
+            if (checkedInRoomIds.contains(room.getId())) {
+                count[0]++;
+            }
+        }
+
+        return counts.entrySet().stream()
+                .map(entry -> new RoomTypeOccupancy(names.get(entry.getKey()), entry.getValue()[0], entry.getValue()[1]))
+                .toList();
     }
 
     /** Clips a stay to the visible week, so a booking spanning the edge still draws correctly. */

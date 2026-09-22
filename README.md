@@ -56,6 +56,7 @@ WHERE email = 'someone@example.com' AND user_id IS NULL;
 |---|---|
 | Guest booking flow in the browser | search → rooms → details → review → confirm → my bookings → cancel |
 | Staff room calendar | weekly grid, colour-coded by status, links to booking detail |
+| Live occupancy | per room type, on the calendar page: rooms actually `CHECKED_IN` right now, out of the total. Separate from booking availability on purpose - see below |
 | Staff booking actions | confirm / check-in / check-out / cancel, each a POST guarded by BR-08 |
 | Staff booking search | `/staff/bookings`, by reference or guest name |
 | Booking edit | dates and party size, by the owning guest or staff, revalidated like a new booking |
@@ -68,6 +69,13 @@ WHERE email = 'someone@example.com' AND user_id IS NULL;
 | Schema as migrations | Flyway, with constraints enforcing the business rules |
 | Page-level error handling | bad input redirects to a flash message, not a stack trace; a 404 renders a real page instead of forcing login |
 | Two layouts per the UI brief | guest pages keep the clean top-bar layout; staff/admin pages use a dark 232px sidebar (`layout/staff.html`), grouped into Staff and Admin sections with live approval-count badges |
+
+**Occupancy is not availability, deliberately.** A room type's booking availability (what `/rooms` search
+returns) is keyed off *every* non-cancelled booking that overlaps the requested dates, regardless of whether
+the guest has arrived - that's what BR-01 actually depends on to stop double-booking, so it can never wait
+for a check-in to take effect. "Occupied now" on the calendar page is a separate, purely informational count
+of rooms with a `CHECKED_IN` booking - useful for "can we seat a walk-in right now," useless (and actively
+wrong) for anything that decides what's bookable.
 
 **Not built yet:** seasonal-rate XML import/export, notification microservice, CI.
 

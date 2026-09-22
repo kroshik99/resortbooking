@@ -65,6 +65,7 @@ public class StaffPageController {
         model.addAttribute("previousWeek", weekStart.minusWeeks(1));
         model.addAttribute("nextWeek", weekStart.plusWeeks(1));
         model.addAttribute("today", LocalDate.now());
+        model.addAttribute("occupancy", calendarService.occupancyNow());
         return "staff/calendar";
     }
 

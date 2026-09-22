@@ -58,4 +58,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
               AND b.checkOut > :today
             """)
     boolean existsActiveBookingAfter(Long roomId, LocalDate today);
+
+    /** Rooms physically occupied right now - distinct from "booked", which includes stays that haven't
+     * started yet. A room only enters this set through an actual check-in. */
+    @Query("""
+            SELECT b.room.id FROM Booking b
+            WHERE b.status = com.resortapi.resortbooking.entity.BookingStatus.CHECKED_IN
+            """)
+    List<Long> findCheckedInRoomIds();
 }

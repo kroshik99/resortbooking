@@ -6,6 +6,16 @@
 <main class="wide">
     <h1>Room calendar</h1>
 
+    <div th:if="${not #lists.isEmpty(occupancy)}">
+        <div class="occupancy-label">Occupied now</div>
+        <div class="occupancy-strip">
+            <span class="occupancy-item" th:each="o : ${occupancy}">
+                <strong th:text="${o.roomTypeName()}">Standard</strong>
+                <span th:text="${o.occupied()} + '/' + ${o.total()}">1/2</span>
+            </span>
+        </div>
+    </div>
+
     <div class="weeknav">
         <a th:href="@{/staff/calendar(week=${previousWeek})}">&larr; Previous</a>
         <strong>

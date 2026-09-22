@@ -174,6 +174,24 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -
 .wrap:has(.wide), main.wide { max-width: none; }
 .wide { width: 100%; }
 
+.occupancy-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+.occupancy-strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+
+.occupancy-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.occupancy-item strong { font-weight: 600; }
+.occupancy-item span { font-family: var(--font-mono); color: var(--muted); }
+
 .weeknav {
     display: flex;
     align-items: center;
